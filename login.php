@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 if(isset($_SESSION['user'])){
@@ -29,180 +30,109 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ОмАЭиП</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Montserrat;}
-
-body{background:#0b1510;color:#fff;overflow:hidden;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif;}
+body{overflow:hidden;background:#0b1510;color:#fff;}
 
 .container{display:flex;height:100vh;}
 
-/* LEFT */
+/* LEFT PANEL */
 .left{
- width:40%;
- background:linear-gradient(160deg,#6f9775,#4d6a52);
- padding:60px;
- position:relative;
- display:flex;
- flex-direction:column;
- justify-content:center;
+  width:35%;
+  background:linear-gradient(180deg,#1c2d20,#0f1a13);
+  padding:60px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
-.left h1{
- font-size:70px;
- font-weight:900;
- animation:fadeUp 1s ease forwards;
+.left h1{font-size:42px;margin-bottom:10px;}
+.left p{opacity:.7;margin-bottom:30px;}
+
+.btn{
+  padding:12px;
+  background:#2e5d3a;
+  border:none;
+  color:#fff;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.3s;
 }
+.btn:hover{transform:translateX(6px);background:#3f7d4f;}
 
-.left p{
- font-size:48px;
- font-weight:800;
- margin-top:20px;
- opacity:0;
- animation:fadeUp 1.5s ease forwards;
-}
-
-.nav{
- position:absolute;
- top:20px;
- left:50%;
- transform:translateX(-50%);
- background:rgba(255,255,255,0.9);
- backdrop-filter:blur(10px);
- border-radius:40px;
- padding:10px 25px;
- color:#333;
- display:flex;
- gap:20px;
-}
-
-.nav a{cursor:pointer;transition:.3s;}
-.nav a:hover{color:#6f9775;}
-
-/* RIGHT */
+/* RIGHT SCROLL */
 .right{
- width:60%;
- overflow-y:auto;
- scroll-behavior:smooth;
+  width:65%;
+  overflow-y:auto;
+  height:100vh;
+  scroll-behavior:smooth;
 }
 
 .hero{
- height:100vh;
- background:url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600') center/cover;
- display:flex;
- justify-content:center;
- align-items:center;
- position:relative;
+  height:100vh;
+  background:url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
 }
 
-.hero::after{
- content:"";
- position:absolute;
- inset:0;
- background:rgba(0,0,0,0.25);
+.login-card{
+  background:#fff;
+  color:#000;
+  padding:30px;
+  border-radius:16px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  transition:.4s;
 }
 
-.card{
- position:relative;
- background:rgba(255,255,255,0.95);
- backdrop-filter:blur(20px);
- border-radius:20px;
- padding:25px;
- text-align:center;
- box-shadow:0 30px 80px rgba(0,0,0,0.7);
- transform:translateY(40px);
- opacity:0;
- animation:fadeUp 1s ease forwards;
-}
+.login-card:hover{transform:scale(1.05) translateY(-10px);} 
 
-.card:hover{
- transform:translateY(-10px) scale(1.05);
-}
+.login-card img{width:140px;border-radius:10px;margin-bottom:15px;}
 
-.card img{
- width:260px;
- border-radius:14px;
+.login-card button{
+  background:#2f5d3a;
+  color:#fff;
+  border:none;
+  padding:10px 20px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.3s;
 }
-
-.card button{
- margin-top:20px;
- font-size:28px;
- font-weight:700;
- background:none;
- border:none;
- color:#4d6a52;
- cursor:pointer;
- position:relative;
-}
-
-.card button::after{
- content:"";
- position:absolute;
- left:0;bottom:-5px;
- width:0;height:3px;
- background:#4d6a52;
- transition:.3s;
-}
-
-.card button:hover::after{width:100%;}
+.login-card button:hover{background:#24492d;}
 
 /* FEATURES */
 .features{
- background:#5a6f3b;
- padding:80px;
+  padding:60px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  background:#0e1a12;
 }
 
-.features h2{
- font-size:42px;
- margin-bottom:40px;
+.feature{
+  background:#18261c;
+  padding:25px;
+  border-radius:12px;
+  transition:.3s;
 }
 
-.item{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin:40px 0;
- border-top:1px dashed rgba(255,255,255,0.3);
- padding-top:20px;
- opacity:0;
- transform:translateY(40px);
- transition:1s;
+.feature:hover{
+  transform:translateY(-8px);
+  background:#213628;
 }
 
-.item.visible{
- opacity:1;
- transform:translateY(0);
-}
+.feature h3{color:#7fd18b;margin-bottom:10px;}
 
-.item span{
- font-size:70px;
- opacity:.3;
-}
 
-/* mountains */
-.mountains{
- height:200px;
- background:#e6dfcf;
- clip-path:polygon(0 60%,10% 50%,20% 55%,30% 40%,40% 45%,50% 35%,60% 50%,70% 45%,80% 55%,90% 40%,100% 60%,100% 100%,0 100%);
+@keyframes fall{
+  to{
+    transform:translateY(110vh) rotate(360deg);
+  }
 }
-
-/* grain overlay */
-body::before{
- content:"";
- position:fixed;
- inset:0;
- background:url('https://grainy-gradients.vercel.app/noise.svg');
- opacity:.08;
- pointer-events:none;
-}
-
-/* animations */
-@keyframes fadeUp{
- from{opacity:0;transform:translateY(40px);} 
- to{opacity:1;transform:translateY(0);} 
-}
-
 </style>
 </head>
 <body>
@@ -210,7 +140,6 @@ body::before{
 <div class="container">
 
 <div class="left">
-<div class="nav"><a>Главная</a><a>О нас</a><a>Вход</a></div>
 <h1>ОмАЭиП</h1>
 <p>Платформа для кураторов</p>
 </div>
@@ -218,10 +147,10 @@ body::before{
 <div class="right">
 
 <section class="hero">
-<form class="card" method="POST">
-<img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400">
+<form class="login-card" method="POST">
+<img src="https://avatars.mds.yandex.net/get-altay/10385418/2a0000018d8d2e936030b1f7fe1aa0575f3b/M_height">
 
-<?php if($error): ?><div style="color:red"><?= $error ?></div><?php endif; ?>
+<?php if($error): ?><div style="color:red;margin-bottom:10px"><?= $error ?></div><?php endif; ?>
 
 <input name="login" placeholder="Логин" required style="margin:10px 0;padding:10px;width:100%">
 <input type="password" name="password" placeholder="Пароль" required style="margin:10px 0;padding:10px;width:100%">
@@ -231,31 +160,24 @@ body::before{
 </section>
 
 <section class="features">
-<h2>Новые возможности</h2>
-
-<div class="item"> <span>01</span> Отслеживание мероприятий </div>
-<div class="item"> <span>02</span> Формирование отчетности </div>
-
+<div class="feature"><h3>Отчетность</h3><p>Формирование отчетов</p></div>
+<div class="feature"><h3>Успеваемость</h3><p>Контроль оценок</p></div>
+<div class="feature"><h3>Мероприятия</h3><p>Учет активности</p></div>
+<div class="feature"><h3>Аналитика</h3><p>Статистика и графики</p></div>
 </section>
-
-<div class="mountains"></div>
 
 </div>
 </div>
 
 <script>
-// появление блоков
-const items=document.querySelectorAll('.item');
-const obs=new IntersectionObserver(entries=>{
- entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
-});
-items.forEach(i=>obs.observe(i));
-
-// параллакс
-window.addEventListener('scroll',()=>{
- let y=window.scrollY;
- document.querySelector('.hero').style.backgroundPosition=`center ${y*0.3}px`;
-});
+// листья
+for(let i=0;i<15;i++){
+ let leaf=document.createElement('div');
+ leaf.className='leaf';
+ leaf.style.left=Math.random()*100+'vw';
+ leaf.style.animationDuration=(5+Math.random()*10)+'s';
+ document.body.appendChild(leaf);
+}
 </script>
 
 </body>
