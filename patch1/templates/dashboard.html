@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Куратор.План – Дашборд</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Montserrat',sans-serif;overflow:hidden;height:100vh}
+        .wrapper{display:flex;height:100vh}
+        .left{
+            width:280px;background:#0c1f16;color:#fff;padding:30px 20px;
+            display:flex;flex-direction:column;z-index:10;box-shadow:2px 0 20px rgba(0,0,0,0.5);
+        }
+        .left h2{font-size:24px;margin-bottom:25px;text-align:center;color:#6bcf7f;cursor:pointer; transition: color 0.3s;}
+        .left h2:hover{color:#fff;}
+        .sidebar-btn{
+            display:block;width:100%;padding:12px 15px;margin:4px 0;background:transparent;
+            border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;text-align:left;
+            cursor:pointer;font-size:14px;transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+        }
+        .sidebar-btn:hover{background:#1e3b2a;border-color:#6bcf7f; transform: translateX(8px);}
+        .sidebar-btn.active{background:#6bcf7f;color:#0c1f16;font-weight:600; transform: none;}
+        .right{flex:1;position:relative;overflow:hidden}
+        .bg-video{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;z-index:0}
+        .blur-overlay{position:absolute;inset:0;backdrop-filter:blur(0px);transition:backdrop-filter 0.3s ease;z-index:1}
+        .blur-overlay.active{backdrop-filter:blur(8px)}
+        .content{position:relative;z-index:2;padding:40px;height:100%;overflow-y:auto}
+        .card{
+            background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;
+            padding:25px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3);color:#1a1a1a;
+            max-width:100%;
+            animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+        }
+        .card:nth-child(odd){animation-delay: 0.1s;}
+        .card:nth-child(even){animation-delay: 0.2s;}
+        .card h3{margin-bottom:15px}
+        input, select, textarea, button{
+            padding:10px;margin:5px;border-radius:8px;border:1px solid #ccc;font-family:inherit;
+            transition: all 0.3s ease;
+        }
+        button{background:#6bcf7f;border:none;cursor:pointer;font-weight:600; color:#fff;}
+        button:hover{background:#4ea861; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2);}
+        button:active{transform: translateY(0);}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+        .section{display:none}
+        .section.active{display:block}
+        #toast{
+            position:fixed;top:20px;right:20px;background:#6bcf7f;color:#fff;
+            padding:12px 20px;border-radius:8px;z-index:9999;opacity:0;transition: opacity 0.4s, transform 0.4s;
+            transform: translateY(-20px);
+        }
+        #toast.show{opacity:1; transform: translateY(0);}
+        .fc {
+            color: #000;
+            font-size: 0.75em;
+            width: 100% !important;
+            max-width: 100%;
+            overflow-x: auto;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .fc:hover {
+            box-shadow: 0 0 15px rgba(107,207,127,0.3);
+            transform: scale(1.01);
+        }
+        .fc .fc-daygrid-day {
+            transition: background 0.2s, transform 0.2s;
+        }
+        .fc .fc-daygrid-day:hover {
+            background: rgba(107,207,127,0.15);
+            transform: scale(1.02);
+            cursor: pointer;
+        }
+        .fc .fc-daygrid-day-number { font-size: 0.9em; transition: color 0.2s; }
+        .fc .fc-day:hover .fc-daygrid-day-number { color: #2d6a4f; font-weight: bold; }
+        .fc .fc-col-header-cell-cushion { font-size: 0.85em; }
+        .fc .fc-toolbar-title { font-size: 1.1em; }
+        .file-upload-btn{
+            background:#6bcf7f;color:white;padding:10px 20px;border-radius:8px;
+            cursor:pointer;display:inline-block; transition: all 0.3s;
+        }
+        .file-upload-btn:hover{background:#4ea861; box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
+        .file-upload-btn input[type="file"]{display:none}
+        .large{min-height:120px;resize:vertical;width:100%;font-size:14px}
+        .modal{
+            display:flex;
+            visibility: hidden;
+            opacity: 0;
+            position:fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background:rgba(0,0,0,0.5);
+            z-index:10000;
+            justify-content:center;
+            align-items:center;
+            transition: visibility 0.2s, opacity 0.3s;
+        }
+        .modal.active{ visibility: visible; opacity: 1; }
+        .modal-content{
+            background:#fff;
+            padding:30px;
+            border-radius:16px;
+            max-width:700px;
+            width:90%;
+            box-shadow:0 20px 40px rgba(0,0,0,0.5);
+            max-height:80vh;
+            overflow-y:auto;
+            transform: scale(0.8) translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-content h3{margin-top:0}
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .library-btn { background: #f0ad4e; color: #fff; }
+        .library-btn:hover { background: #ec971f; }
+        .progress-bar-container {
+            background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0;
+        }
+        .progress-bar-fill {
+            height: 100%; border-radius: 10px; background: #6bcf7f; transition: width 0.5s;
+        }
+        .status-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+        }
+        .status-badge.success { background: #6bcf7f; color: #fff; }
+        .status-badge.warning { background: #f0ad4e; color: #fff; }
+        .status-badge.danger { background: #dc3545; color: #fff; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="left" id="sidebar">
+        <h2 onclick="showSection('dashboard')">Куратор.План</h2>
+    </div>
+    <div class="right">
+        <video class="bg-video" autoplay muted loop>
+            <source src="/video/forest.mp4" type="video/mp4">
+        </video>
+        <div class="blur-overlay" id="blurOverlay"></div>
+        <div class="content">
+            <!-- Главная -->
+            <div id="dashboard" class="section active">
+                <div class="card"><h3>Добро пожаловать</h3><p>Загрузка...</p></div>
+            </div>
+
+            <!-- План -->
+            <div id="plan" class="section"></div>
+
+            <!-- Журнал (календарь) -->
+            <div id="journal" class="section">
+                <div class="card" style="padding:15px;">
+                    <h3>Календарь мероприятий</h3>
+                    <div id="calendar"></div>
+                </div>
+                <div class="card" id="eventEditForm" style="display:none">
+                    <h4>Редактирование мероприятия</h4>
+                    <input id="editTitle" placeholder="Название"><input type="date" id="editDate">
+                    <select id="editStatus"><option>planned</option><option>conducted</option><option>postponed</option><option>cancelled</option></select>
+                    <select id="editSuccess"><option>neutral</option><option>good</option><option>bad</option></select>
+                    <input type="number" id="editParticipants" placeholder="Участники">
+                    <textarea id="editComment" placeholder="Комментарий"></textarea>
+                    <div style="margin:10px 0">
+                        <label>Прикрепить файлы (до 5):</label>
+                        <input type="file" id="editFiles" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                    </div>
+                    <button onclick="saveEvent()">Сохранить</button>
+                </div>
+                <div class="card">
+                    <h4>Социальный паспорт группы</h4>
+                    <textarea id="socialPassport" class="large" rows="6"></textarea>
+                    <button onclick="saveSocialPassport()">Сохранить</button>
+                </div>
+            </div>
+
+            <!-- Отчёт -->
+            <div id="report" class="section">
+                <div class="card">
+                    <h3>Итоговый отчёт</h3>
+                    <select id="reportPeriod">
+                        <option value="2025-2026">2025-2026 учебный год</option>
+                        <option value="2025-1">1 семестр 2025</option>
+                        <option value="2026-2">2 семестр 2026</option>
+                    </select>
+                    <button onclick="generateFullReport()">🔍 Сформировать черновик</button>
+                    <button onclick="generateAIReport()">🤖 AI-анализ</button>
+                    <button onclick="loadSavedFullReport()">📂 Загрузить сохранённый</button>
+                </div>
+                <div class="card">
+                    <h4>1. Самоанализ деятельности куратора</h4>
+                    <textarea id="selfAnalysisFull" class="large" rows="8" placeholder="Введите самоанализ..."></textarea>
+                </div>
+                <div class="card">
+                    <h4>2. Общая оценка деятельности группы</h4>
+                    <textarea id="groupEvaluation" class="large" rows="5" placeholder="Опишите группу, успеваемость, динамику..."></textarea>
+                </div>
+                <div class="card">
+                    <h4>3. План-факт анализ (формируется автоматически)</h4>
+                    <div id="planFactContainer"></div>
+                </div>
+                <div class="card">
+                    <h4>4. Диаграмма направлений воспитания</h4>
+                    <canvas id="chart" style="max-height:250px"></canvas>
+                </div>
+                <div class="card">
+                    <button onclick="saveFullReport()">💾 Сохранить весь отчёт</button>
+                    <button onclick="exportDOCX()">📥 Экспорт DOCX</button>
+                    <button onclick="exportPDF()">📥 Экспорт PDF</button>
+                </div>
+            </div>
+
+            <!-- Успеваемость (Дневник.ру) -->
+            <div id="grades" class="section">
+                <div class="card">
+                    <h3>Успеваемость группы (Дневник.ру)</h3>
+                    <p>Используется API-токен, заданный администратором.</p>
+                    <button onclick="loadDnevnikGrades()">🔄 Загрузить данные</button>
+                    <div id="dnevnikTableContainer" style="margin-top:15px"></div>
+                </div>
+            </div>
+
+            <!-- Сводка (M1-M3) -->
+            <div id="summary" class="section">
+                <div class="card">
+                    <h3>Сводная отчётность</h3>
+                    <button onclick="exportSummaryExcel()" style="margin-bottom:15px;">📊 Экспорт в Excel</button>
+                    <table id="summaryTable">
+                        <thead><tr><th>Куратор</th><th>Группа</th><th>Статус плана</th><th>Статус отчёта</th><th>План</th><th>Отчёт</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Администрирование -->
+            <div id="admin" class="section">
+                <div class="card">
+                    <h3>Пользователи</h3>
+                    <div id="userList"></div>
+                    <hr>
+                    <h4>Добавить пользователя</h4>
+                    <input id="newLogin" placeholder="Логин"><input id="newPass" type="password" placeholder="Пароль">
+                    <select id="newRole"><option>curator</option><option>organizer</option><option>admin</option></select>
+                    <button onclick="addUser()">✅ Добавить</button>
+                    <hr>
+                    <h4>Установить API-токен Дневник.ру</h4>
+                    <select id="tokenUserSelect"></select>
+                    <input id="dnevnikTokenInput" placeholder="Токен">
+                    <button onclick="setUserToken()">💾 Установить</button>
+                </div>
+                <div class="card">
+                    <h3>Логи действий (J4)</h3>
+                    <button onclick="loadLogs()">🔄 Обновить</button>
+                    <table id="logTable">
+                        <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Библиотека мероприятий</h3>
+                    <div id="templatesList"></div>
+                    <hr>
+                    <h4>Добавить / Редактировать шаблон</h4>
+                    <input id="tplName" placeholder="Название мероприятия">
+                    <input id="tplModule" placeholder="Модуль (из шаблона)">
+                    <input type="date" id="tplDate" placeholder="Дата по умолчанию">
+                    <input id="tplResponsible" placeholder="Ответственный">
+                    <select id="tplDirection">
+                        <option value="">Направление</option>
+                        <option>Гражданское</option><option>Патриотическое</option><option>Физическое</option>
+                        <option>Духовное</option><option>Трудовое</option><option>Эстетическое</option>
+                        <option>Экологическое</option><option>ЗОЖ</option>
+                    </select>
+                    <input type="hidden" id="tplEditId">
+                    <button onclick="saveTemplate()">💾 Сохранить</button>
+                    <button onclick="cancelEditTemplate()" id="cancelEditBtn" style="display:none; background:#ccc; color:#000;">Отмена</button>
+                </div>
+                <div class="card">
+                    <label class="file-upload-btn">📂 Загрузить Excel
+                        <input type="file" id="excelFile" accept=".xlsx" onchange="importExcel()">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+<div id="moduleModal" class="modal">
+    <div class="modal-content">
+        <h3>Добавить модуль</h3>
+        <label>Название модуля</label><input id="modTitle" style="width:100%">
+        <label>Сроки</label><input id="modDeadline" type="date" style="width:100%">
+        <label>Ответственный</label><select id="modResponsible" style="width:100%"></select>
+        <label>Количество участников</label><input id="modParticipants" type="number" value="0" style="width:100%">
+        <label>Направление воспитания</label><select id="modDirection" style="width:100%">
+            <option>Гражданское</option><option>Патриотическое</option><option>Физическое</option>
+            <option>Духовное</option><option>Трудовое</option><option>Эстетическое</option>
+            <option>Экологическое</option><option>ЗОЖ</option>
+        </select>
+        <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="submitModule()" style="background:#6bcf7f; color:#fff;">Сохранить</button>
+            <button onclick="closeModuleModal()" style="background:#ccc; color:#000;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="libraryModal" class="modal">
+    <div class="modal-content">
+        <h3>Библиотека мероприятий</h3>
+        <div id="libraryList"></div>
+        <button onclick="closeLibraryModal()" style="margin-top:15px;">Отмена</button>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра плана куратора (M2) -->
+<div id="planViewModal" class="modal">
+    <div class="modal-content" style="max-width:800px;">
+        <h3>План куратора</h3>
+        <div id="planViewContent"></div>
+        <button onclick="closeModal('planViewModal')" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра отчёта куратора (M2) -->
+<div id="reportViewModal" class="modal">
+    <div class="modal-content" style="max-width:800px;">
+        <h3>Отчёт куратора</h3>
+        <div id="reportViewContent"></div>
+        <button onclick="closeModal('reportViewModal')" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <h3>Отчёт куратора</h3>
+        <div id="reportModalContent"></div>
+        <button onclick="closeReportModal()" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="dayEventsModal" class="modal">
+    <div class="modal-content">
+        <h3>Мероприятия на <span id="dayDate"></span></h3>
+        <div id="dayEventsList"></div>
+        <button onclick="closeDayEventsModal()" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script>
+// ================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==================
+const token = localStorage.getItem('token');
+if (!token) window.location = 'login.php';
+
+let currentRole = '';
+let currentUserId = 0;
+let currentPlanId = null;
+let calendar = null;
+let chart = null;                // график Chart.js
+let fullReportData = {};
+
+// ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
+async function api(action, method='GET', body=null){
+    const headers = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+    };
+    const opts = {method, headers};
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch('api.php?action=' + action, opts);
+    return res.json();
+}
+
+function notify(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function setupBlur(){
+    document.querySelectorAll('.sidebar-btn').forEach(b => {
+        b.addEventListener('mouseenter', () => document.getElementById('blurOverlay').classList.add('active'));
+        b.addEventListener('mouseleave', () => document.getElementById('blurOverlay').classList.remove('active'));
+    });
+}
+
+function showSection(id){
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
+    if (id === 'plan') loadPlanSection();
+    else if (id === 'journal') loadJournalSection();
+    else if (id === 'report') loadReportSection();
+    else if (id === 'grades') loadDnevnikSection();
+    else if (id === 'summary') loadSummarySection();
+    else if (id === 'admin') loadAdminSection();
+}
+
+// ================== ИНИЦИАЛИЗАЦИЯ ==================
+async function initRole(){
+    try {
+        const user = await api('me');
+        currentRole = user.role;
+        currentUserId = user.id;
+        const sidebar = document.getElementById('sidebar');
+        const items = [
+            ['dashboard', '🏠 Главная'],
+            ['plan', '📋 План'],
+            ['journal', '📅 Календарь'],
+            ['report', '📊 Отчёт']
+        ];
+        if (user.dnevnik_token) {
+            items.push(['grades', '📘 Успеваемость']);
+        }
+        if (currentRole === 'organizer' || currentRole === 'admin') {
+            items.push(['summary', '📈 Сводка']);
+        }
+        if (currentRole === 'admin') {
+            items.push(['admin', '⚙️ Админ']);
+        }
+
+        items.forEach(([id, label]) => {
+            const btn = document.createElement('button');
+            btn.className = 'sidebar-btn';
+            if (id === 'dashboard') btn.classList.add('active');
+            btn.textContent = label;
+            btn.onclick = () => showSection(id);
+            sidebar.appendChild(btn);
+        });
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'sidebar-btn';
+        logoutBtn.textContent = '🚪 Выход';
+        logoutBtn.style.marginTop = 'auto';
+        logoutBtn.style.background = 'rgba(255,80,80,0.2)';
+        logoutBtn.style.borderColor = '#ff5050';
+        logoutBtn.onclick = () => { localStorage.removeItem('token'); location = 'login.php'; };
+        sidebar.appendChild(logoutBtn);
+
+        setupBlur();
+        loadDashboardHome(user);
+    } catch(e) {
+        alert('Ошибка авторизации');
+        location = 'login.php';
+    }
+}
+
+async function loadDashboardHome(user){
+    const card = document.querySelector('#dashboard .card');
+    let percentDone = 0, planStatus = 'не сдан', reportStatus = 'не сдан';
+    try {
+        const summary = await api('summary_data');
+        if (summary && summary.length) {
+            const my = summary.find(s => s.user_id == currentUserId);
+            if (my) {
+                planStatus = my.plan_status || 'не сдан';
+                reportStatus = my.report_status || 'не сдан';
+                percentDone = my.percent_done || 0;
+            }
+        }
+    } catch(e) {}
+
+    let planBadge = planStatus === 'ready' ? 'success' : 'warning';
+    let reportBadge = reportStatus === 'submitted' ? 'success' : 'danger';
+
+    card.innerHTML = `
+        <h3>Добро пожаловать, ${user.login}!</h3>
+        <p>Роль: ${currentRole}</p>
+        <div style="margin:15px 0;">
+            <h4>Выполнение плана</h4>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width:${percentDone}%;"></div>
+            </div>
+            <span>${percentDone}% (выполнено / запланировано)</span>
+        </div>
+        <div>
+            План: <span class="status-badge ${planBadge}">${planStatus}</span>
+            Отчёт: <span class="status-badge ${reportBadge}">${reportStatus}</span>
+        </div>
+        <div style="margin-top:15px;">
+            <button onclick="showSection('plan')">📋 План на год</button>
+            <button onclick="showSection('journal')">📅 Журнал</button>
+            <button onclick="showSection('report')">📊 Отчёт</button>
+        </div>
+    `;
+
+    try {
+        const events = await api('events&upcoming=true');
+        if (events.length) {
+            let html = '<h4>📌 Ближайшие мероприятия</h4>';
+            events.slice(0, 5).forEach(e => {
+                html += `<p><b>${e.title}</b> – ${e.date} (${e.status})</p>`;
+            });
+            card.innerHTML += html;
+        }
+    } catch(e) {}
+}
+
+// ================== ПЛАН ==================
+function loadPlanSection(){
+    const html = `
+        <div class="card">
+            <h3>Годовой план воспитательной работы</h3>
+            <p><b>Куратор:</b> <span id="curatorName">Загрузка...</span></p>
+            <select id="groupSelect"><option>ПО-41</option><option>ИС-32</option></select>
+            <input id="planYear" value="2025-2026" placeholder="Учебный год">
+            <button onclick="createPlan()">Создать план</button>
+        </div>
+        <div class="card">
+            <h4>Пояснительная записка</h4>
+            <textarea id="planDescription" class="large" rows="4" placeholder="Опишите цели и задачи..."></textarea>
+        </div>
+        <div class="card">
+            <h4>Целевой раздел</h4>
+            <textarea id="planGoals" class="large" rows="4" placeholder="Основные направления воспитательной работы..."></textarea>
+        </div>
+        <div class="card">
+            <h4>Организационный раздел (модули)</h4>
+            <table id="planTable">
+                <thead><tr>
+                    <th>Модуль</th><th>Сроки</th><th>Ответственные</th><th>Участники</th><th>Направление воспитания</th><th></th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+            <button onclick="openModuleModal()">+ Добавить строку</button>
+            <button onclick="openLibraryModal()" class="library-btn">📚 Из библиотеки</button>
+            <span id="warningMsg" style="color:#e67e22"></span>
+        </div>
+        <div class="card">
+            <button onclick="savePlanMeta()">💾 Сохранить описание</button>
+            <button onclick="saveDraft()">💾 Сохранить черновик</button>
+            <button onclick="markReady()">✅ Готов к сдаче</button>
+            <button onclick="exportPlan()">📤 Экспорт плана в DOCX</button>
+        </div>
+    `;
+    document.getElementById('plan').innerHTML = html;
+    loadLastPlan();
+    loadCuratorName();
+}
+
+async function loadCuratorName(){
+    try {
+        const user = await api('me');
+        document.getElementById('curatorName').textContent = user.full_name || user.login;
+    } catch(e){}
+}
+
+async function loadLastPlan(){
+    const res = await api('get_my_last_plan');
+    if (res.plan) {
+        currentPlanId = res.plan.id;
+        document.getElementById('groupSelect').value = res.plan.group_name || 'ПО-41';
+        document.getElementById('planYear').value = res.plan.year || '2025-2026';
+        if (res.plan.description) document.getElementById('planDescription').value = res.plan.description;
+        if (res.plan.goals) document.getElementById('planGoals').value = res.plan.goals;
+        loadPlanRows();
+    } else {
+        currentPlanId = null;
+        document.querySelector('#planTable tbody').innerHTML = '<tr><td colspan="6">План ещё не создан.</td></tr>';
+    }
+}
+
+async function createPlan(){
+    const group = document.getElementById('groupSelect').value;
+    const year = document.getElementById('planYear').value;
+    const res = await api('create_plan', 'POST', {group, year});
+    if (res.ok) {
+        currentPlanId = res.plan_id;
+        loadPlanRows();
+        if (calendar) calendar.refetchEvents();
+        notify('План создан');
+    }
+}
+
+async function loadPlanRows(){
+    if (!currentPlanId) return;
+    const rows = await api('load_plan&plan_id=' + currentPlanId);
+    let html = '';
+    if (Array.isArray(rows) && rows.length) {
+        rows.forEach(r => {
+            html += `<tr>
+                <td>${r.module}</td>
+                <td>${r.deadline}</td>
+                <td>${r.responsible}</td>
+                <td>${r.participants}</td>
+                <td>${r.direction}</td>
+                <td><button onclick="deleteRow(${r.id})">×</button></td>
+            </tr>`;
+        });
+        document.querySelector('#planTable tbody').innerHTML = html;
+        checkDirections(rows);
+    } else {
+        document.querySelector('#planTable tbody').innerHTML = '<tr><td colspan="6">Пока нет модулей. Добавьте первый.</td></tr>';
+    }
+}
+
+function checkDirections(rows){
+    const required = ['Гражданское','Патриотическое','Физическое','Духовное','Трудовое','Эстетическое','Экологическое','ЗОЖ'];
+    const present = new Set(rows.map(r => r.direction));
+    const missing = required.filter(d => !present.has(d));
+    const warning = document.getElementById('warningMsg');
+    if (missing.length > 0) {
+        warning.textContent = '⚠️ Не охвачены направления: ' + missing.join(', ');
+    } else {
+        warning.textContent = '✅ Все направления охвачены';
+    }
+}
+
+async function deleteRow(id){
+    if (!confirm('Удалить модуль? Связанное мероприятие также будет удалено.')) return;
+    await api('delete_plan_row', 'POST', {id});
+    loadPlanRows();
+    if (calendar) calendar.refetchEvents();
+    notify('Модуль удалён');
+}
+
+async function savePlanMeta(){
+    if (!currentPlanId) return;
+    const description = document.getElementById('planDescription').value;
+    const goals = document.getElementById('planGoals').value;
+    await api('save_plan_meta', 'POST', {plan_id: currentPlanId, description, goals});
+    notify('Описание сохранено');
+}
+
+function saveDraft(){ notify('Черновик сохранён'); }
+async function markReady(){
+    if (!currentPlanId) return;
+    await api('mark_plan_ready', 'POST', {plan_id: currentPlanId});
+    notify('План отмечен как готовый');
+}
+async function exportPlan(){
+    if (!currentPlanId) return;
+    window.open(`api.php?action=export_plan_docx&plan_id=${currentPlanId}&token=${token}`, '_blank');
+}
+
+// ================== БИБЛИОТЕКА ==================
+async function openLibraryModal(){
+    const templates = await api('get_templates');
+    const listDiv = document.getElementById('libraryList');
+    if (!templates.length) {
+        listDiv.innerHTML = '<p>Библиотека пуста</p>';
+        openModal('libraryModal');
+        return;
+    }
+    let html = '<ul style="list-style:none; padding:0">';
+    templates.forEach(t => {
+        html += `<li style="padding:10px; border-bottom:1px solid #ddd; cursor:pointer" onclick="useTemplate(${t.id})">${t.name || t.content}</li>`;
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+    openModal('libraryModal');
+}
+function closeLibraryModal(){ closeModal('libraryModal'); }
+
+async function useTemplate(tplId){
+    const templates = await api('get_templates');
+    const tpl = templates.find(t => t.id == tplId);
+    if (!tpl) return;
+    document.getElementById('modTitle').value = tpl.name || tpl.content || '';
+    document.getElementById('modDeadline').value = tpl.date || '';
+    document.getElementById('modResponsible').value = tpl.responsible || '';
+    document.getElementById('modParticipants').value = tpl.participants || 0;
+    document.getElementById('modDirection').value = tpl.direction || 'Гражданское';
+    closeLibraryModal();
+    await loadTeachers();
+    openModal('moduleModal');
+}
+
+async function loadTeachers(){
+    const teachers = await api('get_teachers');
+    const sel = document.getElementById('modResponsible');
+    sel.innerHTML = '';
+    teachers.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.login;
+        opt.textContent = t.login;
+        sel.appendChild(opt);
+    });
+    if (document.getElementById('modResponsible').value) return;
+    if (teachers.length) document.getElementById('modResponsible').value = teachers[0].login;
+}
+
+// ================== МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ МОДУЛЯ ==================
+async function openModuleModal(){
+    if (!currentPlanId) {
+        const group = document.getElementById('groupSelect').value;
+        const year = document.getElementById('planYear').value;
+        const res = await api('create_plan', 'POST', {group, year});
+        if (res.ok) {
+            currentPlanId = res.plan_id;
+            if (calendar) calendar.refetchEvents();
+            notify('План автоматически создан');
+        } else {
+            alert('Не удалось создать план');
+            return;
+        }
+    }
+    await loadTeachers();
+    openModal('moduleModal');
+}
+
+function closeModuleModal(){ closeModal('moduleModal'); }
+
+async function submitModule(){
+    const module = document.getElementById('modTitle').value.trim();
+    const deadline = document.getElementById('modDeadline').value;
+    const responsible = document.getElementById('modResponsible').value;
+    const participants = document.getElementById('modParticipants').value;
+    const direction = document.getElementById('modDirection').value;
+
+    if (!module || !deadline || !responsible) {
+        alert('Заполните обязательные поля');
+        return;
+    }
+
+    await api('add_plan_row', 'POST', {
+        plan_id: currentPlanId,
+        module, deadline, responsible, participants, direction
+    });
+    closeModal('moduleModal');
+    loadPlanRows();
+    if (calendar) calendar.refetchEvents();
+    notify('Модуль добавлен');
+}
+
+// ================== КАЛЕНДАРЬ ==================
+function loadJournalSection(){
+    if (!calendar) initCalendar();
+    else calendar.refetchEvents();
+}
+
+function initCalendar(){
+    const el = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        locale: 'ru',
+        firstDay: 1,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+        },
+        contentHeight: 'auto',
+        events: async (info, success, fail) => {
+            try {
+                const events = await api('events');
+                const full = events.map(e => ({
+                    id: e.id,
+                    title: e.title,
+                    start: e.date,
+                    backgroundColor: e.status === 'conducted' ? '#6bcf7f' : (e.status === 'cancelled' ? '#dc3545' : '#ffc107'),
+                    extendedProps: {
+                        responsible: e.responsible,
+                        direction: e.direction,
+                        participants: e.participants
+                    }
+                }));
+                success(full);
+            } catch (err) { fail(err); }
+        },
+        eventClick: info => editEvent(info.event.id),
+        dateClick: (info) => showDayEvents(info.dateStr)
+    });
+    calendar.render();
+}
+
+async function showDayEvents(dateStr){
+    const events = await api('events');
+    const dayEvents = events.filter(e => e.date === dateStr);
+    const dayDateSpan = document.getElementById('dayDate');
+    dayDateSpan.textContent = new Date(dateStr).toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+    const list = document.getElementById('dayEventsList');
+    if (dayEvents.length === 0) {
+        list.innerHTML = '<p>Нет запланированных мероприятий</p>';
+    } else {
+        let html = '<ul>';
+        dayEvents.forEach(e => {
+            html += `<li><b>${e.title}</b> (${e.status})<br>
+            <small>Ответственный: ${e.responsible || '—'}, направление: ${e.direction || '—'}</small></li>`;
+        });
+        html += '</ul>';
+        list.innerHTML = html;
+    }
+    openModal('dayEventsModal');
+}
+function closeDayEventsModal(){ closeModal('dayEventsModal'); }
+
+async function editEvent(id){
+    const events = await api('events');
+    const e = events.find(ev => ev.id == id);
+    if (!e) return;
+    document.getElementById('editTitle').value = e.title;
+    document.getElementById('editDate').value = e.date;
+    document.getElementById('editStatus').value = e.status;
+    document.getElementById('editSuccess').value = e.success;
+    document.getElementById('editParticipants').value = e.participants;
+    document.getElementById('editComment').value = e.comment || '';
+    document.getElementById('eventEditForm').style.display = 'block';
+    document.getElementById('eventEditForm').dataset.eventId = id;
+}
+
+async function saveEvent(){
+    const id = document.getElementById('eventEditForm').dataset.eventId;
+    const data = {
+        id,
+        status: document.getElementById('editStatus').value,
+        success: document.getElementById('editSuccess').value,
+        participants: document.getElementById('editParticipants').value,
+        comment: document.getElementById('editComment').value
+    };
+    await api('update_event', 'POST', data);
+    document.getElementById('eventEditForm').style.display = 'none';
+    calendar.refetchEvents();
+    notify('Изменения сохранены');
+}
+
+// ================== СОЦИАЛЬНЫЙ ПАСПОРТ ==================
+async function loadSocialPassport(){
+    const res = await api('get_social_passport');
+    document.getElementById('socialPassport').value = res.text || '';
+}
+async function saveSocialPassport(){
+    await api('save_social_passport', 'POST', {text: document.getElementById('socialPassport').value});
+    notify('Паспорт сохранён');
+}
+
+// ================== ОТЧЁТ ==================
+function loadReportSection(){}
+
+async function generateFullReport(){
+    const period = document.getElementById('reportPeriod').value;
+    const report = await api('generate_report');
+    document.getElementById('selfAnalysisFull').value = report.text;
+    const saved = await api('get_my_full_report&period=' + period);
+    if (saved && saved.self_analysis) document.getElementById('selfAnalysisFull').value = saved.self_analysis;
+    if (saved && saved.group_evaluation) document.getElementById('groupEvaluation').value = saved.group_evaluation;
+
+    // Безопасное уничтожение предыдущего графика
+    if (chart && typeof chart.destroy === 'function') {
+        chart.destroy();
+    }
+    chart = new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(report.directions),
+            datasets: [{ label: 'Мероприятия', data: Object.values(report.directions) }]
+        }
+    });
+
+    let pfHtml = '<table><tr><th>Модуль</th><th>План</th><th>Факт</th><th>%</th></tr>';
+    report.planFact.forEach(r => pfHtml += `<tr><td>${r.module}</td><td>${r.planned}</td><td>${r.fact}</td><td>${r.percent}%</td></tr>`);
+    pfHtml += '</table>';
+    document.getElementById('planFactContainer').innerHTML = pfHtml;
+    fullReportData = report;
+}
+
+async function loadSavedFullReport(){
+    const period = document.getElementById('reportPeriod').value;
+    const saved = await api('get_my_full_report&period=' + period);
+    if (saved && saved.id) {
+        document.getElementById('selfAnalysisFull').value = saved.self_analysis || '';
+        document.getElementById('groupEvaluation').value = saved.group_evaluation || '';
+        const report = await api('generate_report');
+        if (chart && typeof chart.destroy === 'function') chart.destroy();
+        chart = new Chart(document.getElementById('chart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(report.directions),
+                datasets: [{ label: 'Мероприятия', data: Object.values(report.directions) }]
+            }
+        });
+        let pfHtml = '<table><tr><th>Модуль</th><th>План</th><th>Факт</th><th>%</th></tr>';
+        report.planFact.forEach(r => pfHtml += `<tr><td>${r.module}</td><td>${r.planned}</td><td>${r.fact}</td><td>${r.percent}%</td></tr>`);
+        pfHtml += '</table>';
+        document.getElementById('planFactContainer').innerHTML = pfHtml;
+        fullReportData = report;
+    } else {
+        alert('Сохранённый отчёт не найден');
+    }
+}
+
+async function saveFullReport(){
+    const period = document.getElementById('reportPeriod').value;
+    const selfAnalysis = document.getElementById('selfAnalysisFull').value;
+    const groupEvaluation = document.getElementById('groupEvaluation').value;
+    const res = await api('save_full_report', 'POST', {
+        period,
+        self_analysis: selfAnalysis,
+        group_evaluation: groupEvaluation
+    });
+    if (res.ok) notify('Отчёт сохранён');
+}
+
+async function generateAIReport(){
+    const events = await api('events');
+    const res = await fetch('api.php?action=ai_report', {
+        method: 'POST',
+        headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+        body: JSON.stringify({events})
+    });
+    const data = await res.json();
+    document.getElementById('selfAnalysisFull').value = data.report;
+    notify('AI-анализ добавлен в самоанализ');
+}
+
+// ================== ЭКСПОРТ ФАЙЛОВ (через fetch + Blob) ==================
+async function exportDOCX(){
+    if (!fullReportData) return;
+    const params = `action=export_report_docx&period=2025-2026&text=${encodeURIComponent(fullReportData.text)}&planFact=${encodeURIComponent(JSON.stringify(fullReportData.planFact))}`;
+    const res = await fetch('api.php?' + params, { headers: {'Authorization': 'Bearer ' + token} });
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'report.docx';
+    a.click();
+}
+async function exportPDF(){
+    if (!fullReportData) return;
+    const params = `action=export_pdf&text=${encodeURIComponent(fullReportData.text)}`;
+    const res = await fetch('api.php?' + params, { headers: {'Authorization': 'Bearer ' + token} });
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'report.pdf';
+    a.click();
+}
+async function exportSummaryExcel(){
+    const res = await fetch('api.php?action=export_summary_excel', { headers: {'Authorization': 'Bearer ' + token} });
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'summary.csv';
+    a.click();
+}
+
+// ================== ДНЕВНИК.РУ ==================
+async function loadDnevnikGrades(){
+    const container = document.getElementById('dnevnikTableContainer');
+    try {
+        const res = await fetch('api.php?action=get_my_dnevnik_grades', {
+            method: 'GET',
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        const data = await res.json();
+        if (data.error) {
+            container.innerHTML = `<p style="color:red">${data.error}</p>`;
+            return;
+        }
+        let html = '';
+        if (data.students && data.students.length) {
+            html += '<table><thead><tr><th>Студент</th><th>Предметы (оценки)</th></tr></thead><tbody>';
+            data.students.forEach(s => {
+                const subs = s.subjects.map(sub => `${sub.subject}: ${sub.marks.join(', ')} (ср. ${sub.average})`).join('<br>');
+                html += `<tr><td>${s.name}</td><td>${subs}</td></tr>`;
+            });
+            html += '</tbody></table>';
+        } else {
+            html = '<p>Нет данных</p>';
+        }
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<p style="color:red">Не удалось загрузить данные</p>';
+    }
+}
+
+// ================== СВОДКА (M1-M3) ==================
+async function loadSummarySection(){
+    document.getElementById('summary').innerHTML = `
+        <div class="card">
+            <h3>Сводная отчётность</h3>
+            <button onclick="exportSummaryExcel()" style="margin-bottom:15px;">📊 Экспорт в Excel</button>
+            <table id="summaryTable">
+                <thead><tr><th>Куратор</th><th>Группа</th><th>Статус плана</th><th>Статус отчёта</th><th>План</th><th>Отчёт</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>`;
+    const data = await api('summary_data');
+    let rows = '';
+    data.forEach(r => {
+        rows += `<tr>
+            <td>${r.login}</td>
+            <td>${r.group_name}</td>
+            <td>${r.plan_status || '—'}</td>
+            <td>${r.report_status || '—'}</td>
+            <td><button onclick="viewCuratorPlan(${r.user_id}, '${r.year}')">📋 Открыть</button></td>
+            <td><button onclick="viewCuratorReportModal(${r.user_id}, '${r.year}')">📄 Открыть</button></td>
+        </tr>`;
+    });
+    document.querySelector('#summaryTable tbody').innerHTML = rows || '<tr><td colspan="6">Нет данных</td></tr>';
+}
+
+async function viewCuratorPlan(userId, year) {
+    const res = await api('get_user_plan_details&user_id=' + userId + '&year=' + year);
+    const modalContent = document.getElementById('planViewContent');
+    if (!res || !res.plan) {
+        modalContent.innerHTML = '<p>План не найден</p>';
+    } else {
+        const plan = res.plan;
+        let html = `<p><b>Группа:</b> ${plan.group_name || '—'}</p>`;
+        html += `<p><b>Год:</b> ${plan.year}</p>`;
+        html += `<p><b>Пояснительная записка:</b> ${plan.description || '—'}</p>`;
+        html += `<p><b>Целевой раздел:</b> ${plan.goals || '—'}</p>`;
+        html += `<h4>Модули</h4>`;
+        if (res.rows && res.rows.length) {
+            html += `<table><tr><th>Модуль</th><th>Сроки</th><th>Ответственные</th><th>Направление</th></tr>`;
+            res.rows.forEach(row => {
+                html += `<tr><td>${row.module}</td><td>${row.deadline}</td><td>${row.responsible}</td><td>${row.direction}</td></tr>`;
+            });
+            html += '</table>';
+        } else {
+            html += '<p>Модули отсутствуют</p>';
+        }
+        modalContent.innerHTML = html;
+    }
+    openModal('planViewModal');
+}
+
+async function viewCuratorReportModal(userId, period){
+    const report = await api('get_user_full_report&user_id=' + userId + '&period=' + period);
+    const modalContent = document.getElementById('reportModalContent');
+    if (!report || !report.id) {
+        modalContent.innerHTML = '<p>Отчёт ещё не подготовлен</p>';
+    } else {
+        modalContent.innerHTML = `
+            <p><b>Самоанализ:</b> ${report.self_analysis || '—'}</p>
+            <p><b>Оценка группы:</b> ${report.group_evaluation || '—'}</p>
+        `;
+    }
+    openModal('reportModal');
+}
+function closeReportModal(){ closeModal('reportModal'); }
+
+// ================== АДМИНИСТРИРОВАНИЕ ==================
+async function loadAdminSection(){
+    await loadUsers();
+    await loadLogs();
+    await loadTemplates();
+}
+
+async function loadUsers(){
+    const users = await api('users');
+    let html = '<table><tr><th>Логин</th><th>Роль</th><th>Токен Дневник.ру</th><th>Действия</th></tr>';
+    users.forEach(u => {
+        html += `<tr>
+            <td>${u.login}</td><td>${u.role}</td>
+            <td>${u.dnevnik_token ? '••••••' : 'не задан'}</td>
+            <td>
+                <button onclick="deleteUser(${u.id})">❌ Удалить</button>
+            </td>
+        </tr>`;
+    });
+    html += '</table>';
+    document.getElementById('userList').innerHTML = html;
+
+    const sel = document.getElementById('tokenUserSelect');
+    sel.innerHTML = '';
+    users.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.id;
+        opt.textContent = u.login;
+        sel.appendChild(opt);
+    });
+}
+
+async function loadLogs(){
+    const tbody = document.querySelector('#logTable tbody');
+    tbody.innerHTML = '<tr><td colspan="3">Загрузка...</td></tr>';
+    try {
+        const logs = await api('get_logs');
+        let html = '';
+        if (Array.isArray(logs) && logs.length) {
+            logs.forEach(log => {
+                html += `<tr>
+                    <td>${log.timestamp || ''}</td>
+                    <td>${log.user_login || 'система'}</td>
+                    <td>${log.action}</td>
+                </tr>`;
+            });
+        } else {
+            html = '<tr><td colspan="3">Логи пока пусты</td></tr>';
+        }
+        tbody.innerHTML = html;
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="3">Ошибка загрузки логов</td></tr>';
+    }
+}
+
+async function addUser(){
+    const login = document.getElementById('newLogin').value.trim();
+    const password = document.getElementById('newPass').value.trim();
+    const role = document.getElementById('newRole').value;
+    if (!login || !password) return alert('Заполните логин и пароль');
+    await api('add_user', 'POST', {login, password, role});
+    loadUsers();
+    document.getElementById('newLogin').value = '';
+    document.getElementById('newPass').value = '';
+    notify('Пользователь добавлен');
+}
+
+async function deleteUser(id){
+    if (!confirm('Удалить пользователя безвозвратно?')) return;
+    await api('delete_user', 'POST', {id});
+    loadUsers();
+    notify('Пользователь удалён');
+}
+
+async function setUserToken(){
+    const userId = document.getElementById('tokenUserSelect').value;
+    const tokenVal = document.getElementById('dnevnikTokenInput').value.trim();
+    if (!userId || !tokenVal) return alert('Выберите пользователя и введите токен');
+    await api('set_dnevnik_token', 'POST', {user_id: userId, token: tokenVal});
+    notify('Токен установлен');
+    document.getElementById('dnevnikTokenInput').value = '';
+}
+
+// ================== БИБЛИОТЕКА (АДМИН) ==================
+async function loadTemplates(){
+    const templates = await api('get_templates');
+    let html = '<table><tr><th>Название</th><th>Модуль</th><th>Дата</th><th>Ответственный</th><th>Направление</th><th>Действия</th></tr>';
+    templates.forEach(t => {
+        html += `<tr>
+            <td>${t.name || t.content}</td>
+            <td>${t.module || ''}</td>
+            <td>${t.date || ''}</td>
+            <td>${t.responsible || ''}</td>
+            <td>${t.direction || ''}</td>
+            <td>
+                <button onclick="editTemplate(${t.id})">✏️</button>
+                <button onclick="deleteTemplate(${t.id})">🗑️</button>
+            </td>
+        </tr>`;
+    });
+    html += '</table>';
+    document.getElementById('templatesList').innerHTML = html;
+}
+
+async function editTemplate(id){
+    const templates = await api('get_templates');
+    const tpl = templates.find(t => t.id == id);
+    if (!tpl) return;
+    document.getElementById('tplName').value = tpl.name || '';
+    document.getElementById('tplModule').value = tpl.module || '';
+    document.getElementById('tplDate').value = tpl.date || '';
+    document.getElementById('tplResponsible').value = tpl.responsible || '';
+    document.getElementById('tplDirection').value = tpl.direction || '';
+    document.getElementById('tplEditId').value = id;
+    document.getElementById('cancelEditBtn').style.display = 'inline-block';
+}
+
+function cancelEditTemplate(){
+    document.getElementById('tplName').value = '';
+    document.getElementById('tplModule').value = '';
+    document.getElementById('tplDate').value = '';
+    document.getElementById('tplResponsible').value = '';
+    document.getElementById('tplDirection').value = '';
+    document.getElementById('tplEditId').value = '';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+async function saveTemplate(){
+    const name = document.getElementById('tplName').value.trim();
+    if (!name) return alert('Введите название');
+    const data = {
+        name,
+        module: document.getElementById('tplModule').value.trim(),
+        date: document.getElementById('tplDate').value,
+        responsible: document.getElementById('tplResponsible').value.trim(),
+        direction: document.getElementById('tplDirection').value
+    };
+    const editId = document.getElementById('tplEditId').value;
+    if (editId) {
+        data.id = editId;
+        await api('update_template', 'POST', data);
+    } else {
+        await api('save_template', 'POST', data);
+    }
+    cancelEditTemplate();
+    loadTemplates();
+    notify('Шаблон сохранён');
+}
+
+async function deleteTemplate(id){
+    if (!confirm('Удалить шаблон?')) return;
+    await api('delete_template', 'POST', {id});
+    loadTemplates();
+    notify('Шаблон удалён');
+}
+
+async function importExcel(){
+    const file = document.getElementById('excelFile').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const sh = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sh, {header: 1});
+        for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r || r.length < 2) continue;
+            await api('add_event', 'POST', {
+                title: r[0] || 'Без названия',
+                date: r[1],
+                direction: r[2] || '',
+                participants: parseInt(r[3]) || 0,
+                status: r[4] || 'planned'
+            });
+        }
+        notify('Импорт завершён');
+        if (calendar) calendar.refetchEvents();
+        document.getElementById('excelFile').value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Старт
+initRole();
+</script>
+</body>
+</html>
