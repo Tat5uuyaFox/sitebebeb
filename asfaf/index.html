@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Куратор.План – Дашборд</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+    <!-- Стили приложения -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrapper">
+    <!-- ===== SIDEBAR ===== -->
+    <div class="left" id="sidebar">
+        <h2 onclick="showSection('dashboard')">Куратор.План</h2>
+    </div>
+
+    <!-- ===== MAIN AREA ===== -->
+    <div class="right">
+        <video class="bg-video" autoplay muted loop>
+            <source src="/video/forest.mp4" type="video/mp4">
+        </video>
+        <div class="blur-overlay" id="blurOverlay"></div>
+
+        <div class="content">
+            <!-- Главная -->
+            <div id="dashboard" class="section active">
+                <div class="card"><h3>Добро пожаловать</h3><p>Загрузка...</p></div>
+            </div>
+
+            <!-- План -->
+            <div id="plan" class="section"></div>
+
+            <!-- Журнал (календарь) -->
+            <div id="journal" class="section">
+                <div class="card" style="padding:15px;">
+                    <h3>Календарь мероприятий</h3>
+                    <div id="calendar"></div>
+                </div>
+                <div class="card" id="eventEditForm" style="display:none">
+                    <h4>Редактирование мероприятия</h4>
+                    <input id="editTitle" placeholder="Название">
+                    <input type="date" id="editDate">
+                    <select id="editStatus">
+                        <option>planned</option>
+                        <option>conducted</option>
+                        <option>postponed</option>
+                        <option>cancelled</option>
+                    </select>
+                    <select id="editSuccess">
+                        <option>neutral</option>
+                        <option>good</option>
+                        <option>bad</option>
+                    </select>
+                    <input type="number" id="editParticipants" placeholder="Участники" min="0">
+                    <textarea id="editComment" placeholder="Комментарий"></textarea>
+                    <button onclick="saveEvent()">Сохранить</button>
+                </div>
+            </div>
+
+            <!-- Отчёт -->
+            <div id="report" class="section">
+                <div class="card">
+                    <h3>Итоговый отчёт</h3>
+                    <select id="reportPeriod">
+                        <option value="2025-2026">2025-2026 учебный год</option>
+                        <option value="2025-1">1 семестр 2025</option>
+                        <option value="2026-2">2 семестр 2026</option>
+                    </select>
+                    <button onclick="generateFullReport()">🔍 Сформировать черновик</button>
+                    <button onclick="generateAIReport()">🤖 AI-анализ</button>
+                    <button onclick="loadSavedFullReport()">📂 Загрузить сохранённый</button>
+                </div>
+                <div class="card">
+                    <h4>1. Самоанализ деятельности куратора</h4>
+                    <textarea id="selfAnalysisFull" class="large" rows="8" placeholder="Введите самоанализ..."></textarea>
+                </div>
+                <div class="card">
+                    <h4>2. Общая оценка деятельности группы</h4>
+                    <textarea id="groupEvaluation" class="large" rows="5" placeholder="Опишите группу, успеваемость, динамику..."></textarea>
+                </div>
+                <div class="card">
+                    <h4>3. План-факт анализ (формируется автоматически)</h4>
+                    <div id="planFactContainer"></div>
+                </div>
+                <div class="card">
+                    <h4>4. Диаграмма направлений воспитания</h4>
+                    <canvas id="chart" style="max-height:250px"></canvas>
+                </div>
+                <div class="card">
+                    <button onclick="saveFullReport()">💾 Сохранить весь отчёт</button>
+                    <button onclick="exportDOCX()">📥 Экспорт DOCX</button>
+                    <button onclick="exportPDF()">📥 Экспорт PDF</button>
+                </div>
+            </div>
+
+            <!-- Успеваемость (Дневник.ру) -->
+            <div id="grades" class="section">
+                <div class="card">
+                    <h3>Успеваемость группы (Дневник.ру)</h3>
+                    <p>Используется API-токен, заданный администратором.</p>
+                    <button onclick="loadDnevnikGrades()">🔄 Загрузить данные</button>
+                    <div id="dnevnikTableContainer" style="margin-top:15px"></div>
+                </div>
+            </div>
+
+            <!-- Сводка (M1-M3) -->
+            <div id="summary" class="section">
+                <div class="card">
+                    <h3>Сводная отчётность</h3>
+                    <button onclick="exportSummaryExcel()" style="margin-bottom:15px;">📊 Экспорт в Excel</button>
+                    <table id="summaryTable">
+                        <thead>
+                            <tr>
+                                <th>Куратор</th><th>Группа</th><th>Статус плана</th>
+                                <th>Статус отчёта</th><th>План</th><th>Отчёт</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Администрирование -->
+            <div id="admin" class="section">
+                <div class="card">
+                    <h3>Пользователи</h3>
+                    <div id="userList"></div>
+                    <hr>
+                    <h4>Добавить пользователя</h4>
+                    <input id="newLogin" placeholder="Логин">
+                    <input id="newPass" type="password" placeholder="Пароль">
+                    <select id="newRole">
+                        <option>curator</option>
+                        <option>organizer</option>
+                        <option>admin</option>
+                    </select>
+                    <button onclick="addUser()">✅ Добавить</button>
+                    <hr>
+                    <h4>Установить API-токен Дневник.ру</h4>
+                    <select id="tokenUserSelect"></select>
+                    <input id="dnevnikTokenInput" placeholder="Токен">
+                    <button onclick="setUserToken()">💾 Установить</button>
+                </div>
+                <div class="card">
+                    <h3>Группы</h3>
+                    <div id="groupList"></div>
+                    <hr>
+                    <h4>Добавить / Редактировать группу</h4>
+                    <input id="groupName" placeholder="Название группы (например ПО-41)">
+                    <select id="groupCuratorSelector"></select>
+                    <button onclick="saveGroup()">💾 Сохранить</button>
+                </div>
+                <div class="card">
+                    <h3>Логи действий (J4)</h3>
+                    <button onclick="loadLogs()">🔄 Обновить</button>
+                    <table id="logTable">
+                        <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Библиотека мероприятий</h3>
+                    <div id="templatesList"></div>
+                    <hr>
+                    <h4>Добавить / Редактировать шаблон</h4>
+                    <input id="tplName" placeholder="Название мероприятия">
+                    <input id="tplModule" placeholder="Модуль (из шаблона)">
+                    <input type="date" id="tplDate" placeholder="Дата по умолчанию">
+                    <input id="tplResponsible" placeholder="Ответственный">
+                    <select id="tplDirection">
+                        <option value="">Направление</option>
+                        <option>Гражданское</option><option>Патриотическое</option>
+                        <option>Физическое</option><option>Духовное</option>
+                        <option>Трудовое</option><option>Эстетическое</option>
+                        <option>Экологическое</option><option>ЗОЖ</option>
+                    </select>
+                    <input type="hidden" id="tplEditId">
+                    <button onclick="saveTemplate()">💾 Сохранить</button>
+                    <button onclick="cancelEditTemplate()" id="cancelEditBtn" style="display:none; background:#ccc; color:#000;">Отмена</button>
+                </div>
+                <div class="card">
+                    <button onclick="clearAllData()" style="background:#dc3545;">🗑️ Очистить все планы и мероприятия</button>
+                </div>
+                <div class="card">
+                    <label class="file-upload-btn">📂 Загрузить Excel
+                        <input type="file" id="excelFile" accept=".xlsx" onchange="importExcel()">
+                    </label>
+                </div>
+            </div>
+        </div><!-- /.content -->
+    </div><!-- /.right -->
+</div><!-- /.wrapper -->
+
+<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+<div id="moduleModal" class="modal">
+    <div class="modal-content">
+        <h3>Добавить модуль</h3>
+        <label>Название модуля</label>
+        <input id="modTitle" style="width:100%">
+        <label>Сроки</label>
+        <input id="modDeadline" type="date" style="width:100%">
+        <label>Ответственный</label>
+        <select id="modResponsible" style="width:100%"></select>
+        <label>Количество участников</label>
+        <input id="modParticipants" type="number" value="0" min="0" step="1" style="width:100%">
+        <label>Направление воспитания</label>
+        <select id="modDirection" style="width:100%">
+            <option>Гражданское</option><option>Патриотическое</option><option>Физическое</option>
+            <option>Духовное</option><option>Трудовое</option><option>Эстетическое</option>
+            <option>Экологическое</option><option>ЗОЖ</option>
+        </select>
+        <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="submitModule()" style="background:#6bcf7f; color:#fff;">Сохранить</button>
+            <button onclick="closeModuleModal()" style="background:#ccc; color:#000;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="libraryModal" class="modal">
+    <div class="modal-content">
+        <h3>Библиотека мероприятий</h3>
+        <div id="libraryList"></div>
+        <button onclick="closeLibraryModal()" style="margin-top:15px;">Отмена</button>
+    </div>
+</div>
+
+<div id="planViewModal" class="modal">
+    <div class="modal-content" style="max-width:800px;">
+        <h3>План куратора</h3>
+        <div id="planViewContent"></div>
+        <button onclick="closeModal('planViewModal')" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="reportViewModal" class="modal">
+    <div class="modal-content" style="max-width:800px;">
+        <h3>Отчёт куратора</h3>
+        <div id="reportViewContent"></div>
+        <button onclick="closeModal('reportViewModal')" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <h3>Отчёт куратора</h3>
+        <div id="reportModalContent"></div>
+        <button onclick="closeReportModal()" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="dayEventsModal" class="modal">
+    <div class="modal-content">
+        <h3>Мероприятия на <span id="dayDate"></span></h3>
+        <div id="dayEventsList"></div>
+        <button onclick="closeDayEventsModal()" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===== СТОРОННИЕ БИБЛИОТЕКИ (defer = не блокируют рендер) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
+
+<!-- ===== МОДУЛИ ПРИЛОЖЕНИЯ ===== -->
+<script src="js/api.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/plan.js" defer></script>
+<script src="js/journal.js" defer></script>
+<script src="js/report.js" defer></script>
+<script src="js/admin.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>
