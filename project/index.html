@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0604" />
+  <meta
+    name="description"
+    content="Портал — интерактивное 3D-путешествие по вселенной"
+  />
+  <title>ПОРТАЛ — интерактивная вселенная</title>
+
+  <!-- Шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Стили -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ============================================================
+       1. CANVAS — весь 3D-мир живёт здесь
+       Позиционируется fixed, никогда не скроллится.
+       ============================================================ -->
+  <canvas id="stage" aria-hidden="true"></canvas>
+
+  <!-- ============================================================
+       2. ВИНЬЕТКА — тёмные края поверх 3D
+       ============================================================ -->
+  <div id="vignette" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       3. ПРЕЛОАДЕР — виден до загрузки сцены
+       ============================================================ -->
+  <div id="loader" role="status" aria-live="polite">
+    <div class="loader__inner">
+      <div class="loader__symbol" aria-hidden="true">◈</div>
+      <div class="loader__title">ПОРТАЛ</div>
+      <div class="loader__progress">
+        <div class="loader__progress-bar" id="loaderBar"></div>
+      </div>
+      <div class="loader__status" id="loaderStatus">ИНИЦИАЛИЗАЦИЯ⋯</div>
+    </div>
+  </div>
+
+  <header class="masthead" aria-label="Портал">
+    <a class="masthead__brand" href="#top" aria-label="Портал — к началу">
+      <span class="masthead__sigil" aria-hidden="true">✳</span>
+      <span class="masthead__wordmark">ПОРТАЛ<span> / полевая запись</span></span>
+    </a>
+    <div class="masthead__chapter" aria-live="polite">
+      <span class="masthead__chapter-label" id="chapterLabel">ВХОД В ПЕЩЕРУ</span>
+      <span class="masthead__chapter-count" id="chapterCount">01 — 06</span>
+    </div>
+    <span class="masthead__status"><i></i> СИГНАЛ СТАБИЛЕН</span>
+  </header>
+
+  <!-- ============================================================
+       4. ОСНОВНОЙ ОВЕРЛЕЙ — UI поверх 3D
+       ============================================================ -->
+  <main id="app">
+
+    <!-- 4.1 — Заголовок портала (интро, первый экран) -->
+    <section class="chapter chapter--intro" data-chapter="intro" id="top">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">АТЛАС НЕИЗВЕСТНОГО · 001</span>
+        <h1 class="title" data-anim="title">
+          <span class="title__line">ПОРТАЛ</span>
+        </h1>
+        <p class="subtitle" data-anim="subtitle">
+          В глубине земли есть место,<br />которого нет ни на одной карте.
+        </p>
+        <div class="scroll-hint" data-anim="hint">
+          <span class="scroll-hint__text">Погрузиться</span>
+          <span class="scroll-hint__arrow" aria-hidden="true">↓</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4.2 — Глава 1: Врата -->
+    <section class="chapter chapter--left" data-chapter="gates">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">ПОРОГ · 01</span>
+        <span class="chapter__index">01 / 04</span>
+        <h2 class="chapter__title" data-anim="chapterTitle">Врата</h2>
+        <p class="chapter__text" data-anim="chapterText">
+          Каменная арка появляется только в ночи без звёзд. За ней
+          воздух холоднее, а каждый шаг звучит так, будто кто-то
+          отвечает из глубины.
+        </p>
+      </div>
+    </section>
+
+    <!-- 4.3 — Глава 2: Пространство -->
+    <section class="chapter chapter--right" data-chapter="space">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">ГЕОГРАФИЯ · 02</span>
+        <span class="chapter__index">02 / 04</span>
+        <h2 class="chapter__title" data-anim="chapterTitle">Пространство</h2>
+        <p class="chapter__text" data-anim="chapterText">
+          Здесь вода течёт вверх по скале, а свет задерживается
+          между уступами. Карты бесполезны: пространство меняется,
+          пока ты на него смотришь.
+        </p>
+      </div>
+    </section>
+
+    <!-- 4.4 — Глава 3: Обитатели -->
+    <section class="chapter chapter--left" data-chapter="beings">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">СВИДЕТЕЛЬСТВА · 03</span>
+        <span class="chapter__index">03 / 04</span>
+        <h2 class="chapter__title" data-anim="chapterTitle">Обитатели</h2>
+        <p class="chapter__text" data-anim="chapterText">
+          В кристаллах иногда появляется чужой силуэт. Он не
+          приближается и не исчезает — только поворачивается,
+          когда ты отводишь взгляд.
+        </p>
+      </div>
+    </section>
+
+    <!-- 4.5 — Глава 4: Возвращение -->
+    <section class="chapter chapter--right" data-chapter="return">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">ПАМЯТЬ · 04</span>
+        <span class="chapter__index">04 / 04</span>
+        <h2 class="chapter__title" data-anim="chapterTitle">Возвращение</h2>
+        <p class="chapter__text" data-anim="chapterText">
+          На обратном пути фонари горят уже не там, где раньше.
+          Ты помнишь дорогу. Пещера — нет.
+        </p>
+      </div>
+    </section>
+
+    <!-- 4.6 — Финал — CTA -->
+    <section class="chapter chapter--final" data-chapter="final">
+      <div class="chapter__content">
+        <span class="chapter__eyebrow">КОНЕЦ ЗАПИСИ · 05</span>
+        <h2 class="title title--final" data-anim="finalTitle">
+          ВОЙТИ
+        </h2>
+        <p class="subtitle" data-anim="finalSubtitle">
+          Запись закончена. Путь остаётся открытым.
+        </p>
+        <button class="cta" id="restartBtn" data-anim="cta" data-magnetic="0.3" type="button">
+            <span>Вернуться к вратам</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 4.7 — Распорка для скролла (невидимая) -->
+    <div class="scroll-spacer" aria-hidden="true"></div>
+
+  </main>
+
+  <!-- ============================================================
+       5. НАВИГАЦИЯ (точки справа)
+       ============================================================ -->
+  <nav id="nav" aria-label="Навигация по главам">
+    <button class="nav__dot is-active" data-target="intro" data-label="Вход" data-magnetic="0.6" aria-label="Вход в пещеру"></button>
+    <button class="nav__dot" data-target="gates" data-label="Врата" data-magnetic="0.6" aria-label="Врата"></button>
+    <button class="nav__dot" data-target="space" data-label="Пространство" data-magnetic="0.6" aria-label="Пространство"></button>
+    <button class="nav__dot" data-target="beings" data-label="Обитатели" data-magnetic="0.6" aria-label="Обитатели"></button>
+    <button class="nav__dot" data-target="return" data-label="Возвращение" data-magnetic="0.6" aria-label="Возвращение"></button>
+    <button class="nav__dot" data-target="final" data-label="Выход" data-magnetic="0.6" aria-label="Выход"></button>
+    <button class="control-btn" id="soundToggle" data-magnetic="0.4" aria-label="Выключить звук" aria-pressed="true" type="button">
+        <span class="control-btn__icon" data-icon="sound-off">◉</span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       6. ИНДИКАТОР ПРОГРЕССА (полоса скролла)
+       ============================================================ -->
+  <div id="progress" aria-hidden="true">
+    <div class="progress__bar" id="progressBar"></div>
+  </div>
+
+  <!-- ============================================================
+       7. КНОПКИ УПРАВЛЕНИЯ (звук / меню)
+       ============================================================ -->
+
+  <!-- ============================================================
+       8. IMPORTMAP для Three.js
+       ============================================================ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "lenis": "https://unpkg.com/lenis@1.1.14/dist/lenis.mjs",
+    "gsap": "https://unpkg.com/gsap@3.12.5/index.js",
+    "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.5/ScrollTrigger.js"
+  }
+}
+</script>
+
+  <!-- ============================================================
+       9. ТОЧКА ВХОДА
+       ============================================================ -->
+  <script type="module" src="src/main.js"></script>
+
+</body>
+</html>
